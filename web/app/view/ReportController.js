@@ -139,6 +139,9 @@ Ext.define('Traccar.view.ReportController', {
         disabled = !reportType || !devices || !time;
         this.lookupReference('showButton').setDisabled(disabled);
         this.lookupReference('exportButton').setDisabled(reportType === 'chart' || disabled);
+        this.lookupReference('lastHourButton').setDisabled(!reportType || reportType === 'chart' || !this.selectedDevice);
+        this.lookupReference('todayButton').setDisabled(!reportType || reportType === 'chart' || !this.selectedDevice);
+        this.lookupReference('lastWeekButton').setDisabled(!reportType || reportType === 'chart' || !this.selectedDevice);
     },
 
     onReportClick: function (button) {
@@ -191,6 +194,43 @@ Ext.define('Traccar.view.ReportController', {
         this.clearReport(reportType);
     },
 
+    simpleShow: function (from, to) {
+        var store = this.getGrid().getStore();
+        store.showMarkers = false;
+        store.load({
+            params: {
+                deviceId: this.selectedDevice.getId(),
+                type: Traccar.store.ReportEventTypes.allEvents,
+                from: from.toISOString(),
+                to: to.toISOString()
+            }
+        });
+    },
+
+    onTodayClick: function () {
+        var from, to;
+        from = new Date();
+        from.setHours(0, 0, 0, 0);
+        to = new Date();
+        this.simpleShow(from, to);
+    },
+
+    onLastHourClick: function () {
+        var from, to;
+        from = new Date();
+        from.setHours(from.getHours() - 1);
+        to = new Date();
+        this.simpleShow(from, to);
+    },
+
+    onLastWeekClick: function () {
+        var from, to;
+        from = new Date();
+        from.setDate(from.getDate() - 7);
+        to = new Date();
+        this.simpleShow(from, to);
+    },
+
     clearReport: function (reportType) {
         this.getGrid().getStore().removeAll();
         if (reportType === 'trips' || reportType === 'events' || reportType === 'stops') {
@@ -219,6 +259,8 @@ Ext.define('Traccar.view.ReportController', {
         if (device) {
             this.getGrid().getSelectionModel().deselectAll();
         }
+        this.selectedDevice = device;
+        this.updateButtons();
     },
 
     selectReport: function (object) {
@@ -239,6 +281,8 @@ Ext.define('Traccar.view.ReportController', {
         if (this.lookupReference('reportTypeField').getValue() !== 'trips') {
             this.getGrid().getSelectionModel().deselectAll();
         }
+        this.selectedDevice = null;
+        this.updateButtons();
     },
 
     selectTrip: function (trip) {

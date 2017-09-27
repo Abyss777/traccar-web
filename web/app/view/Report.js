@@ -64,6 +64,21 @@ Ext.define('Traccar.view.Report', {
         }, {
             text: Strings.reportClear,
             handler: 'onClearClick'
+        }, '-', {
+            text: Strings.reportLastHour,
+            reference: 'lastHourButton',
+            disabled: true,
+            handler: 'onLastHourClick'
+        }, {
+            text: Strings.reportToday,
+            reference: 'todayButton',
+            disabled: true,
+            handler: 'onTodayClick'
+        }, {
+            text: Strings.reportLastWeek,
+            reference: 'lastWeekButton',
+            disabled: true,
+            handler: 'onLastWeekClick'
         }]
     },
 
