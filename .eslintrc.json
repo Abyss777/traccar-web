@@ -9,7 +9,8 @@
         "Traccar": false,
         "Strings": false,
         "Locale": false,
-        "proj4": false
+        "proj4": false,
+        "L": false
     },
     "rules": {
         "strict": "off",

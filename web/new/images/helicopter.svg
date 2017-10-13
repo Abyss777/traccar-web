@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="20"
+   height="20"
+   viewBox="0 0 20 20"
+   id="svg4145"
+   version="1.1"
+   sodipodi:docname="helicopter.svg"
+   inkscape:version="0.92.2 (unknown)">
+  <defs
+     id="defs4147" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     showgrid="false"
+     units="px"
+     inkscape:zoom="5.9"
+     inkscape:cx="-31.525424"
+     inkscape:cy="20"
+     inkscape:window-width="1920"
+     inkscape:window-height="981"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4145" />
+  <metadata
+     id="metadata4150">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <path
+     inkscape:connector-curvature="0"
+     id="icon"
+     d="m 5.5644,3.7901595 v 1.77424 h 6.20984 v 0.88712 c -2.66136,0 -3.516544,1.72811 -3.54848,1.77424 H 4.67728 v 0.88712 0.88712 L 8.22576,10.88712 c 0,1.323583 1.337777,2.66136 2.66136,2.66136 h 2.66136 c 2.661361,0 4.435601,-0.760262 4.435601,-2.66136 0,-1.6225435 -2.228446,-3.9880485 -5.322721,-4.3801555 v -0.942565 h 6.209841 v -1.77424 l -6.209841,0.88712 v -0.44356 c 0,-0.244846 -0.198715,-0.44356 -0.44356,-0.44356 -0.244845,0 -0.44356,0.198714 -0.44356,0.44356 v 0.44356 z m -0.88712,5.32272 c 0,-0.979886 -0.794355,-1.77424 -1.774241,-1.77424 -0.979885,0 -1.77424,0.794354 -1.77424,1.77424 0,0.9798855 0.794355,1.7742405 1.77424,1.7742405 0.979886,0 1.774241,-0.794355 1.774241,-1.7742405 z m 7.98408,-0.88712 c 0.282104,-0.03992 2.88314,0.790424 3.548481,2.6613605 H 12.66136 Z M 17.096961,13.54848 V 14.4356 H 8.22576 v 1.774241 h 8.871201 c 0.980267,0 1.77424,-0.793973 1.77424,-1.774241 v -0.88712 z"
+     style="stroke-width:0.88712007" />
+</svg>
