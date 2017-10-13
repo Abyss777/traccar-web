@@ -14,117 +14,97 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
+'use strict';
 if (!Array.prototype.find) {
-  Object.defineProperty(Array.prototype, "find", {
-    value: function(predicate) {
-      var value;
-      for (var i = 0; i < this.length; i++) {
-        value = this[i];
-        if (predicate.call(arguments[1], value, i, this)) {
-          return value;
+    Object.defineProperty(Array.prototype, 'find', {
+        value: function (predicate) {
+            var value, i;
+            for (i = 0; i < this.length; i++) {
+                value = this[i];
+                if (predicate.call(arguments[1], value, i, this)) {
+                    return value;
+                }
+            }
+            return undefined;
         }
-      }
-      return undefined;
-    }
-  });
+    });
 }
 
-var ajax = function (method, url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-    xhr.open(method, url, true);
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4) {
-            callback(JSON.parse(xhr.responseText));
-        }
-    };
-    if (method == 'POST') {
-        xhr.setRequestHeader('Content-type', 'application/json');
-    }
-    xhr.send()
-};
+var markers = {},
+    selectedMarker,
+    follow = false,
+    url = window.location.protocol + '//' + window.location.host,
+    token = (window.location.search.match(/token=([^&#]+)/) || [])[1],
 
-var onMarkerClick = function (e) {
-    if (this !== selectedMarker) {
+    ajax = function (method, url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+        xhr.open(method, url, true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                return callback(JSON.parse(xhr.responseText));
+            }
+            return null;
+        };
+        if (method === 'POST') {
+            xhr.setRequestHeader('Content-type', 'application/json');
+        }
+        xhr.send();
+    },
+
+    onMarkerClick = function () {
+        if (this !== selectedMarker) {
+            if (selectedMarker) {
+                selectedMarker.options.icon.updateZoom(false);
+                selectedMarker.setZIndexOffset(0);
+            }
+            this.options.icon.updateZoom(true);
+            this.setZIndexOffset(100000);
+            selectedMarker = this;
+        }
+    },
+
+    onMapClick = function () {
         if (selectedMarker) {
             selectedMarker.options.icon.updateZoom(false);
             selectedMarker.setZIndexOffset(0);
+            selectedMarker = null;
         }
-        this.options.icon.updateZoom(true);
-        this.setZIndexOffset(100000);
-        selectedMarker = this;
-    }
-};
+    },
 
-var onMapClick = function (e) {
-    if (selectedMarker) {
-        selectedMarker.options.icon.updateZoom(false);
-        selectedMarker.setZIndexOffset(0);
-        selectedMarker = null;
-    }
-}
+    onFollowClick = function () {
+        follow = this.pressed;
+    },
 
-var getPreference = function(server, user, key, defaultValue) {
-    if (server.forceSettings) {
-        return server[key] || user[key] || defaultValue;
-    } else {
-        return user[key] || server[key] || defaultValue;
-    }
-}
+    getPreference = function (server, user, key, defaultValue) {
+        if (server.forceSettings) {
+            return server[key] || user[key] || defaultValue;
+        } else {
+            return user[key] || server[key] || defaultValue;
+        }
+    },
 
-var url = window.location.protocol + '//' + window.location.host;
-var token = (window.location.search.match(/token=([^&#]+)/) || [])[1];
+    map = L.map('map').on('click', onMapClick);
 
-var map = L.map('map').on('click', onMapClick);
 L.control.scale().addTo(map);
+L.control.followControl({
+    handler: onFollowClick
+}).addTo(map);
 
-var markers = {};
-var selectedMarker;
-
-ajax('GET', url + '/api/server', function(server) {
-    ajax('GET', url + '/api/session?token=' + token, function(user) {
-
-        switch (getPreference(server, user, 'map')) {
-            case 'custom':
-                L.tileLayer(server.mapUrl, {
-                    attribution: ''
-                }).addTo(map);
-                break;
-            case 'carto':
-                L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
-                        'contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                }).addTo(map);
-                break;
-            default:
-                L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
-                break;
-        }
-
-        map.setView(
-            [getPreference(server, user, 'latitude', 0.0), getPreference(server, user, 'longitude', 0.0)],
-            getPreference(server, user, 'zoom', 2)
-        );
-
+ajax('GET', url + '/api/server', function (server) {
+    ajax('GET', url + '/api/session?token=' + token, function (user) {
         var createWs = function (devices, first) {
-            var socket = new WebSocket('ws' + url.substring(4) + '/api/socket');
-
-            socket.onclose = function (event) {
-                console.log('socket closed');
-            };
-
-            socket.onmessage = function (event) {
-                var updatePositions = function (positions, first) {
-                    var minLat, minLon, maxLat, maxLon, i;
+            var socket = new WebSocket('ws' + url.substring(4) + '/api/socket'),
+                updatePositions = function (positions, first) {
+                    var minLat, minLon, maxLat, maxLon, i, position, marker, point, device;
                     for (i = 0; i < positions.length; i++) {
-                        var position = positions[i];
-                        var marker = markers[position.deviceId];
-                        var point = [position.latitude, position.longitude];
+                        position = positions[i];
+                        marker = markers[position.deviceId];
+                        point = [position.latitude, position.longitude];
                         if (!marker) {
-                            var device = devices.find(function (device) { return device.id === position.deviceId });
+                            device = devices.find(function (device) {
+                                return device.id === position.deviceId;
+                            });
                             marker = L.marker(point, {
                                 icon: L.icon.deviceImage({
                                     category: device.category,
@@ -137,6 +117,9 @@ ajax('GET', url + '/api/server', function(server) {
                         } else {
                             marker.options.icon.updateCourse(position.course);
                             marker.setLatLng(point);
+                        }
+                        if (follow && selectedMarker === marker) {
+                            map.panTo(point);
                         }
                         if (first) {
                             if (i === 0) {
@@ -151,23 +134,29 @@ ajax('GET', url + '/api/server', function(server) {
                         }
                     }
                     if (first && getPreference(server, user, 'latitude', 0) === 0 &&
-                            getPreference(server, user, 'longitude', 0) === 0 &&
-                            getPreference(server, user, 'zoom', 0) === 0) {
+                                getPreference(server, user, 'longitude', 0) === 0 &&
+                                getPreference(server, user, 'zoom', 0) === 0) {
                         map.fitBounds([
                             [minLat, minLon],
                             [maxLat, maxLon]
                         ]);
                     }
-                        
                 };
-                var data = JSON.parse(event.data);
+
+            socket.onclose = function () {
+                console.log('socket closed');
+            };
+
+            socket.onmessage = function (event) {
+                var i, device, marker, data = JSON.parse(event.data);
                 if (data.positions) {
                     updatePositions(data.positions, first);
-                    first = false;                }
+                    first = false;
+                }
                 if (data.devices) {
-                    for (var i = 0; i < data.devices.length; i++) {
-                        var device = data.devices[i];
-                        var marker = markers[device.id];
+                    for (i = 0; i < data.devices.length; i++) {
+                        device = data.devices[i];
+                        marker = markers[device.id];
                         if (marker) {
                             marker.options.icon.updateStatus(device.status);
                             marker.options.icon.updateLabel(device.name);
@@ -177,7 +166,31 @@ ajax('GET', url + '/api/server', function(server) {
             };
         };
 
-        ajax('GET', url + '/api/devices', function(devices) {
+        switch (getPreference(server, user, 'map')) {
+            case 'custom':
+                L.tileLayer(server.mapUrl, {
+                    attribution: ''
+                }).addTo(map);
+                break;
+            case 'carto':
+                L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
+                    'contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                }).addTo(map);
+                break;
+            default:
+                L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                break;
+        }
+
+        map.setView(
+            [getPreference(server, user, 'latitude', 0.0), getPreference(server, user, 'longitude', 0.0)],
+            getPreference(server, user, 'zoom', 2)
+        );
+
+        ajax('GET', url + '/api/devices', function (devices) {
             createWs(devices, true);
         });
     });
